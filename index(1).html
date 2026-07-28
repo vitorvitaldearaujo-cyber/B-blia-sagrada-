@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bíblia Sagrada Evangélica (ARC)</title>
+    <style>
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #222222;
+            --header-bg: #2c5e3b;
+            --header-text: #ffffff;
+            --card-bg: #f9f9f9;
+            --border-color: #dddddd;
+            --font-family: 'Arial', sans-serif;
+            --font-size: 18px;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #121212;
+            --text-color: #e0e0e0;
+            --header-bg: #1a3322;
+            --header-text: #a3c1ad;
+            --card-bg: #1e1e1e;
+            --border-color: #333333;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: var(--font-family);
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            font-size: var(--font-size);
+        }
+
+        header {
+            background-color: var(--header-bg);
+            color: var(--header-text);
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            z-index: 10;
+        }
+
+        header h1 {
+            font-size: 1.1rem;
+        }
+
+        .header-icons button {
+            background: none;
+            border: none;
+            color: var(--header-text);
+            font-size: 1.2rem;
+            cursor: pointer;
+            margin-left: 12px;
+        }
+
+        .nav-bar {
+            display: flex;
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 10px;
+            gap: 10px;
+            overflow-x: auto;
+        }
+
+        .nav-bar select {
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            flex: 1;
+            font-size: 0.9rem;
+        }
+
+        main {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .verse {
+            margin-bottom: 15px;
+            line-height: 1.6;
+            padding: 8px;
+            border-radius: 5px;
+            transition: background 0.3s;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .verse:hover {
+            background-color: rgba(0,0,0,0.05);
+        }
+
+        .verse-num {
+            font-weight: bold;
+            font-size: 0.8em;
+            vertical-align: super;
+            margin-right: 4px;
+            color: var(--header-bg);
+        }
+
+        /* Cores de Marcação */
+        .highlight-yellow { background-color: rgba(255, 235, 59, 0.4); }
+        .highlight-green { background-color: rgba(76, 175, 80, 0.3); }
+        .highlight-pink { background-color: rgba(233, 30, 99, 0.3); }
+        .highlight-blue { background-color: rgba(33, 150, 243, 0.3); }
+
+        /* Modais */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .modal-content {
+            background-color: var(--card-bg);
+            padding: 20px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        .modal-content h3 {
+            margin-bottom: 15px;
+        }
+
+        .modal-content label {
+            display: block;
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+
+        .modal-content select, .modal-content input {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            border-radius: 5px;
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        .close-btn {
+            background-color: var(--header-bg);
+            color: var(--header-text);
+            border: none;
+            padding: 10px;
+            width: 100%;
+            border-radius: 5px;
+            margin-top: 20px;
+            cursor: pointer;
+        }
+
+        /* Menu de Ação Flutuante */
+        .action-menu {
+            display: none;
+            position: absolute;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            border-radius: 5px;
+            padding: 5px;
+            z-index: 50;
+            gap: 5px;
+        }
+
+        .color-dot {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .loading {
+            text-align: center;
+            margin-top: 40px;
+            color: var(--text-color);
+            font-style: italic;
+        }
+    </style>
+</head>
+<body data-theme="light">
+
+    <header>
+        <h1 id="app-title">Bíblia Sagrada (ARC)</h1>
+        <div class="header-icons">
+            <button onclick="openSearchModal()" title="Buscar">🔍</button>
+            <button onclick="openSettingsModal()" title="Configurações">⚙️</button>
+        </div>
+    </header>
+
+    <div class="nav-bar">
+        <select id="book-select" onchange="onBookChange()">
+            </select>
+        <select id="chapter-select" onchange="onChapterChange()">
+            </select>
+    </div>
+
+    <main id="bible-text">
+        <div class="loading">Carregando capítulos da Bíblia...</div>
+    </main>
+
+    <div id="settings-modal" class="modal">
+        <div class="modal-content">
+            <h3>Configurações de Leitura</h3>
+            <label for="theme-select">Tema (Fundo):</label>
+            <select id="theme-select" onchange="setTheme(this.value)">
+                <option value="light">Claro (Branco)</option>
+                <option value="dark">Escuro (Preto)</option>
+            </select>
+
+            <label for="font-select">Fonte das Letras:</label>
+            <select id="font-select" onchange="setFont(this.value)">
+                <option value="'Arial', sans-serif">Arial</option>
+                <option value="'Georgia', serif">Georgia (Elegante)</option>
+                <option value="'Times New Roman', serif">Times New Roman</option>
+                <option value="'Courier New', monospace">Courier New</option>
+            </select>
+
+            <label for="size-select">Tamanho do Texto:</label>
+            <select id="size-select" onchange="setFontSize(this.value)">
+                <option value="16px">Pequeno</option>
+                <option value="18px" selected>Médio</option>
+                <option value="22px">Grande</option>
+            </select>
+
+            <button class="close-btn" onclick="closeSettingsModal()">Fechar</button>
+        </div>
+    </div>
+
+    <div id="search-modal" class="modal">
+        <div class="modal-content">
+            <h3>Buscar na Bíblia</h3>
+            <input type="text" id="search-input" placeholder="Digite uma palavra-chave...">
+            <button class="close-btn" onclick="performSearch()">Pesquisar</button>
+            <div id="search-results" style="margin-top: 15px; max-height: 200px; overflow-y: auto; font-size: 0.9rem;"></div>
+            <button class="close-btn" style="background-color: #777; margin-top: 10px;" onclick="closeSearchModal()">Fechar</button>
+        </div>
+    </div>
+
+    <div id="action-menu" class="action-menu">
+        <button class="color-dot" style="background-color: #ffeb3b;" onclick="highlightVerse('yellow')"></button>
+        <button class="color-dot" style="background-color: #4caf50;" onclick="highlightVerse('green')"></button>
+        <button class="color-dot" style="background-color: #e91e63;" onclick="highlightVerse('pink')"></button>
+        <button class="color-dot" style="background-color: #2196f3;" onclick="highlightVerse('blue')"></button>
+        <button class="color-dot" style="background-color: transparent; border: 1px solid #999;" onclick="highlightVerse('none')">❌</button>
+    </div>
+
+    <script>
+        // Relação dos 66 livros da Bíblia Evangélica e a quantidade padrão de capítulos
+        const bibleStructure = {
+            // Antigo Testamento
+            "Gênesis": 50, "Êxodo": 40, "Levítico": 27, "Números": 36, "Deuteronômio": 34,
+            "Josué": 24, "Juízes": 21, "Rute": 4, "1 Samuel": 31, "2 Samuel": 24,
+            "1 Reis": 22, "2 Reis": 25, "1 Crônicas": 29, "2 Crônicas": 36, "Esdras": 10,
+            "Neemias": 13, "Ester": 10, "Jó": 42, "Salmos": 150, "Provérbios": 31,
+            "Eclesiastes": 12, "Cânticos": 8, "Isaías": 66, "Jeremias": 52, "Lamentações": 5,
+            "Ezequiel": 48, "Daniel": 12, "Oséias": 14, "Joel": 3, "Amós": 9,
+            "Obadias": 1, "Jonas": 4, "Miqueias": 7, "Naum": 3, "Habacuque": 3,
+            "Sofonias": 3, "Ageu": 2, "Zacarias": 14, "Malaquias": 4,
+            // Novo Testamento
+            "Mateus": 28, "Marcos": 16, "Lucas": 24, "João": 21, "Atos": 28,
+            "Romanos": 16, "1 Coríntios": 16, "2 Coríntios": 13, "Gálatas": 6, "Efésios": 6,
+            "Filipenses": 4, "Colossenses": 4, "1 Tessalonicenses": 5, "2 Tessalonicenses": 3,
+            "1 Timóteo": 6, "2 Timóteo": 4, "Tito": 3, "Filemom": 1, "Hebreus": 13,
+            "Tiago": 5, "1 Pedro": 5, "2 Pedro": 3, "1 João": 5, "2 João": 1,
+            "3 João": 1, "Judas": 1, "Apocalipse": 22
+        };
+
+        let currentBook = "João";
+        let currentChapter = 1;
+        let selectedVerseElement = null;
+
+        // Inicializa os selects dos livros
+        function initBooks() {
+            const bookSelect = document.getElementById('book-select');
+            bookSelect.innerHTML = '';
+            for (let book in bibleStructure) {
+                let opt = document.createElement('option');
+                opt.value = book;
+                opt.textContent = book;
+                if (book === currentBook) opt.selected = true;
+                bookSelect.appendChild(opt);
+            }
+            updateChapters();
+        }
+
+        // Atualiza os capítulos com base no livro escolhido
+        function updateChapters() {
+            const chapterSelect = document.getElementById('chapter-select');
+            chapterSelect.innerHTML = '';
+            const totalChapters = bibleStructure[currentBook];
+            
+            for (let i = 1; i <= totalChapters; i++) {
+                let opt = document.createElement('option');
+                opt.value = i;
+                opt.textContent = `Capítulo ${i}`;
+                if (i === currentChapter) opt.selected = true;
+                chapterSelect.appendChild(opt);
+            }
+            loadVerses();
+        }
+
+        function onBookChange() {
+            currentBook = document.getElementById('book-select').value;
+            currentChapter = 1;
+            updateChapters();
+        }
+
+        function onChapterChange() {
+            currentChapter = parseInt(document.getElementById('chapter-select').value);
+            loadVerses();
+        }
+
+        // Função para carregar os versículos (Utiliza API aberta e pública para buscar o texto real da Bíblia)
+        async function loadVerses() {
+            const container = document.getElementById('bible-text');
+            container.innerHTML = '<div class="loading">Carregando versículos...</div>';
+
+            try {
+                // Requisição assíncrona da API de Bíblias em português (Versão Almeida Corrigida ou equivalentes)
+                // Usando codificação amigável para URLs
+                let url = `https://bible-api.com/${encodeURIComponent(currentBook)}+${currentChapter}?translation=almeida`;
+                let response = await fetch(url);
+                
+                if (!response.ok) throw new Error("Erro ao carregar dados");
+                
+                let data = await response.json();
+                container.innerHTML = '';
+
+                if (data && data.verses) {
+                    data.verses.forEach(v => {
+                        const div = document.createElement('div');
+                        div.className = 'verse';
+                        div.setAttribute('data-verse', v.verse);
+                        
+                        // Verifica marcações salvas no armazenamento local
+                        const savedHighlight = localStorage.getItem(`${currentBook}_${currentChapter}_${v.verse}`);
+                        if (savedHighlight) {
+                            div.classList.add(`highlight-${savedHighlight}`);
+                        }
+
+                        div.innerHTML = `<span class="verse-num">${v.verse}</span>${v.text}`;
+                        
+                        div.onclick = (e) => {
+                            e.stopPropagation();
+                            showActionMenu(div, e);
+                        };
+
+                        container.appendChild(div);
+                    });
+                } else {
+                    container.innerHTML = '<p>Texto não encontrado para este capítulo.</p>';
+                }
+            } catch (error) {
+                // Fallback de texto caso ocorra falha na conexão de rede
+                container.innerHTML = `<p style="padding: 10px;">Não foi possível carregar os versículos online neste momento. Verifique sua conexão com a internet para carregar os textos dinâmicos de todos os livros.</p>`;
+            }
+        }
+
+        // Sistema de Marcação
+        function showActionMenu(verseElement, event) {
+            selectedVerseElement = verseElement;
+            const menu = document.getElementById('action-menu');
+            menu.style.display = 'flex';
+            menu.style.top = `${event.pageY + 10}px`;
+            menu.style.left = `${event.pageX - 50}px`;
+        }
+
+        document.onclick = function() {
+            document.getElementById('action-menu').style.display = 'none';
+        };
+
+        function highlightVerse(color) {
+            if (!selectedVerseElement) return;
+            selectedVerseElement.classList.remove('highlight-yellow', 'highlight-green', 'highlight-pink', 'highlight-blue');
+            
+            const verseNum = selectedVerseElement.getAttribute('data-verse');
+            const storageKey = `${currentBook}_${currentChapter}_${verseNum}`;
+
+            if (color === 'none') {
+                localStorage.removeItem(storageKey);
+            } else {
+                selectedVerseElement.classList.add(`highlight-${color}`);
+                localStorage.setItem(storageKey, color);
+            }
+            document.getElementById('action-menu').style.display = 'none';
+        }
+
+        // Configurações visuais
+        function openSettingsModal() { document.getElementById('settings-modal').style.display = 'flex'; }
+        function closeSettingsModal() { document.getElementById('settings-modal').style.display = 'none'; }
+        function openSearchModal() { document.getElementById('search-modal').style.display = 'flex'; }
+        function closeSearchModal() { document.getElementById('search-modal').style.display = 'none'; }
+
+        function setTheme(theme) { document.body.setAttribute('data-theme', theme); }
+        function setFont(font) { document.documentElement.style.setProperty('--font-family', font); }
+        function setFontSize(size) { document.documentElement.style.setProperty('--font-size', size); }
+
+        function performSearch() {
+            const query = document.getElementById('search-input').value;
+            const resultsContainer = document.getElementById('search-results');
+            resultsContainer.innerHTML = `<p>Pesquisando por "${query}"...</p>`;
+            // Simulação de busca textual integrada
+            setTimeout(() => {
+                resultsContainer.innerHTML = `<p>Para resultados abrangentes em todos os 66 livros, utilize o carregamento direto por capítulos ou conecte uma base JSON local.</p>`;
+            }, 1000);
+        }
+
+        // Inicializar o aplicativo ao abrir a página
+        initBooks();
+    </script>
+</body>
+</html>
